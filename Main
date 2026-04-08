@@ -1,0 +1,127 @@
+import customtkinter as ctk
+from PIL import Image
+
+# --- CONFIGURACIÓN ---
+ctk.set_appearance_mode("dark")
+ctk.set_default_color_theme("blue")
+
+
+class Reproductor:
+    def __init__(self, root):
+
+        # --- VENTANA ---
+        self.root = root
+        self.root.geometry("1200x700")
+        self.root.title("Nickify")
+
+        self.sidebar_visible = True
+
+        # guardar imágenes para que no desaparezcan
+        self.imagenes = []
+
+        # --- TOPBAR GLOBAL ---
+        self.topbar = ctk.CTkFrame(root, height=50, fg_color="#0d0d0d")
+        self.topbar.pack(fill="x")
+
+        # Botón (mostrar/ocultar sidebar)
+        self.btn_toggle = ctk.CTkButton(
+            self.topbar,
+            text="☰",
+            width=40,
+            fg_color="#ff00ff",
+            hover_color="#ff66ff",
+            text_color="black",
+            command=self.toggle_sidebar
+        )
+        self.btn_toggle.pack(side="left", padx=10, pady=5)
+
+        # --- CONTENEDOR ---
+        self.container = ctk.CTkFrame(root, fg_color="#0a0a0a")
+        self.container.pack(fill="both", expand=True)
+
+        # --- BARRA ---
+        self.sidebar = ctk.CTkFrame(self.container, width=200, fg_color="#050505")
+        self.sidebar.pack(side="left", fill="y")
+
+        # Crear botones con icono + texto
+        self.btn_inicio = self.crear_boton("Inicio", "imagenes/inicio.png")
+        self.btn_biblioteca = self.crear_boton("Biblioteca", "imagenes/biblioteca.png")
+        self.btn_guardado = self.crear_boton("Guardado", "imagenes/guardado.png")
+
+        self.btn_inicio.pack(pady=20, padx=10, fill="x")
+        self.btn_biblioteca.pack(pady=20, padx=10, fill="x")
+        self.btn_guardado.pack(pady=20, padx=10, fill="x")
+
+        # --- MAIN ---
+        self.main = ctk.CTkFrame(self.container, fg_color="#140028")
+        self.main.pack(side="right", fill="both", expand=True)
+
+        # --- TOPBAR INTERNA ---
+        self.topbar_main = ctk.CTkFrame(self.main, height=60, fg_color="#1f003d")
+        self.topbar_main.pack(fill="x")
+
+        # Logo ("todavia no hay uno determinado")
+        self.logo = ctk.CTkLabel(
+            self.topbar_main,
+            text="LOGO",
+            text_color="#00ffff"
+        )
+        self.logo.pack(side="left", padx=15)
+
+        # Buscador
+        self.buscador = ctk.CTkEntry(
+            self.topbar_main,
+            placeholder_text="Buscar...",
+            width=300,
+            fg_color="#0d0d0d",
+            text_color="white",
+            border_color="#ff00ff"
+        )
+        self.buscador.pack(side="left", padx=20, pady=10)
+
+        # --- CONTENIDO ---
+        self.content = ctk.CTkFrame(self.main, fg_color="#1a0033")
+        self.content.pack(fill="both", expand=True)
+
+    # --- CREAR BOTON CON ICONO ---
+    def crear_boton(self, texto, ruta_imagen):
+        # Cargar imagen
+        img = ctk.CTkImage(
+            light_image=Image.open(ruta_imagen),
+            dark_image=Image.open(ruta_imagen),
+            size=(35, 35)
+        )
+
+        # Guardar imagen (evita que desaparezca)
+        self.imagenes.append(img)
+
+        # Crear botón
+        boton = ctk.CTkButton(
+            self.sidebar,
+            text=texto,
+            image=img,
+            compound="top",  #  imagen arriba
+            fg_color="#1a0033",
+            hover_color="#ff00ff",
+            text_color="white",
+            corner_radius=10,
+            height=80  # mas alto para que entre imagen + texto
+        )
+
+        return boton
+
+    # --- MOSTRAR / OCULTAR BARRA ---
+    def toggle_sidebar(self):
+        if self.sidebar_visible:
+            self.sidebar.pack_forget()
+            self.sidebar_visible = False
+        else:
+            self.sidebar.pack(side="left", fill="y")
+            self.sidebar_visible = True
+
+
+# --- EJECUCIÓN ---
+if __name__ == "__main__":
+    root = ctk.CTk()
+    app = Reproductor(root)
+    root.mainloop()
