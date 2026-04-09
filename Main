@@ -1,5 +1,7 @@
 import customtkinter as ctk
 from PIL import Image
+import agregar_musica
+import json_utils
 
 # --- CONFIGURACIÓN ---
 ctk.set_appearance_mode("dark")
@@ -18,6 +20,9 @@ class Reproductor:
 
         # guardar imágenes para que no desaparezcan
         self.imagenes = []
+
+        # Cargar canciones desde el JSON
+        self.canciones = json_utils.cargar_canciones()
 
         # --- TOPBAR GLOBAL ---
         self.topbar = ctk.CTkFrame(root, height=50, fg_color="#0d0d0d")
@@ -46,11 +51,16 @@ class Reproductor:
         # Crear botones con icono + texto
         self.btn_inicio = self.crear_boton("Inicio", "imagenes/inicio.png")
         self.btn_biblioteca = self.crear_boton("Biblioteca", "imagenes/biblioteca.png")
-        self.btn_guardado = self.crear_boton("Guardado", "imagenes/guardado.png")
+        self.btn_guardado = self.crear_boton("Agregar Música", "imagenes/guardado.png")
 
         self.btn_inicio.pack(pady=20, padx=10, fill="x")
         self.btn_biblioteca.pack(pady=20, padx=10, fill="x")
         self.btn_guardado.pack(pady=20, padx=10, fill="x")
+
+        # Conectar el botón con la función externa
+        self.btn_guardado.configure(
+            command=lambda: agregar_musica.agregar_musica(self)
+        )
 
         # --- MAIN ---
         self.main = ctk.CTkFrame(self.container, fg_color="#140028")
@@ -60,19 +70,44 @@ class Reproductor:
         self.topbar_main = ctk.CTkFrame(self.main, height=60, fg_color="#1f003d")
         self.topbar_main.pack(fill="x")
 
-        # Logo ("todavia no hay uno determinado")
-        self.logo = ctk.CTkLabel(
+        # --- LOGO CON IMAGEN ---
+        try:
+            self.logo_img = ctk.CTkImage(
+                light_image=Image.open("imagenes/logo.png"),
+                dark_image=Image.open("imagenes/logo.png"),
+                size=(120, 60)
+            )
+            self.imagenes.append(self.logo_img)
+
+            self.logo = ctk.CTkLabel(
+                self.topbar_main,
+                image=self.logo_img,
+                text=""
+            )
+        except Exception as e:
+            print(f"No se pudo cargar el logo: {e}")
+            self.logo = ctk.CTkLabel(
+                self.topbar_main,
+                text="Nickify",
+                text_color="#00ffff"
+            )
+
+        self.logo.pack(side="left", padx=12)
+
+        # Texto Nickify con estética neón
+        self.logo_texto = ctk.CTkLabel(
             self.topbar_main,
-            text="LOGO",
-            text_color="#00ffff"
+            text="Nickify",
+            text_color="#00ffff",
+            font=("Arial", 22, "bold")
         )
-        self.logo.pack(side="left", padx=15)
+        self.logo_texto.pack(side="left", padx=5)
 
         # Buscador
         self.buscador = ctk.CTkEntry(
             self.topbar_main,
             placeholder_text="Buscar...",
-            width=300,
+            width=500,
             fg_color="#0d0d0d",
             text_color="white",
             border_color="#ff00ff"
@@ -83,31 +118,37 @@ class Reproductor:
         self.content = ctk.CTkFrame(self.main, fg_color="#1a0033")
         self.content.pack(fill="both", expand=True)
 
+        # Área desplazable para mostrar las canciones
+        self.scroll_canciones = ctk.CTkScrollableFrame(
+            self.content,
+            fg_color="#1a0033"
+        )
+        self.scroll_canciones.pack(fill="both", expand=True, padx=10, pady=10)
+
+        # Mostrar las canciones cargadas desde el JSON
+        for cancion in self.canciones:
+            agregar_musica.mostrar_cancion(self, cancion)
+
     # --- CREAR BOTON CON ICONO ---
     def crear_boton(self, texto, ruta_imagen):
-        # Cargar imagen
         img = ctk.CTkImage(
             light_image=Image.open(ruta_imagen),
             dark_image=Image.open(ruta_imagen),
             size=(35, 35)
         )
-
-        # Guardar imagen (evita que desaparezca)
         self.imagenes.append(img)
 
-        # Crear botón
         boton = ctk.CTkButton(
             self.sidebar,
             text=texto,
             image=img,
-            compound="top",  #  imagen arriba
+            compound="top",
             fg_color="#1a0033",
             hover_color="#ff00ff",
             text_color="white",
             corner_radius=10,
-            height=80  # mas alto para que entre imagen + texto
+            height=80
         )
-
         return boton
 
     # --- MOSTRAR / OCULTAR BARRA ---
