@@ -12,7 +12,6 @@ def cargar_canciones():
             with open(ARCHIVO_JSON, "r", encoding="utf-8") as archivo:
                 return json.load(archivo)
         except json.JSONDecodeError:
-            # Si el archivo está vacío o corrupto
             return []
     return []
 

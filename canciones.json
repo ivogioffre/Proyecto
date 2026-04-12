@@ -1,8 +1,14 @@
 [
     {
-        "ruta": "C:/Users/Usuario/Downloads/lady gaga - bad romance.mp3",
-        "titulo": "Bad Romance",
-        "artista": "Lady Gaga",
-        "duracion": "04:24"
+        "ruta": "canciones_guardadas\\Prófugos.mp3",
+        "titulo": "Prófugos",
+        "artista": "Soda Stereo",
+        "duracion": "05:21"
+    },
+    {
+        "ruta": "canciones_guardadas\\Depeche Mode - Enjoy the Silence.mp3",
+        "titulo": "Enjoy the Silence",
+        "artista": "Depeche Mode",
+        "duracion": "04:40"
     }
 ]

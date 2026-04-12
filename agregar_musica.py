@@ -3,53 +3,65 @@ from tkinter import filedialog
 from mutagen.mp3 import MP3
 from mutagen.easyid3 import EasyID3
 import os
+import shutil
 import json_utils
+
+# Carpeta donde se almacenarán las canciones copiadas
+CARPETA_CANCIONES = "canciones_guardadas"
 
 
 def agregar_musica(app):
     """
-    Permite seleccionar archivos de audio, leer sus metadatos
-    y mostrarlos en la interfaz principal del reproductor.
+    Permite seleccionar archivos de audio, copiarlos a una carpeta local,
+    leer sus metadatos y mostrarlos en la interfaz principal del reproductor.
     """
     rutas = filedialog.askopenfilenames(
         title="Seleccionar canciones",
         filetypes=[("Archivos de audio", "*.mp3")]
     )
 
-    # Si el usuario cancela la selección, no hacer nada
     if not rutas:
         return
 
-    for ruta in rutas:
+    # Crear la carpeta si no existe
+    if not os.path.exists(CARPETA_CANCIONES):
+        os.makedirs(CARPETA_CANCIONES)
+
+    for ruta_original in rutas:
         try:
-            # Evitar duplicados
-            if any(c["ruta"] == ruta for c in app.canciones):
+            nombre_archivo = os.path.basename(ruta_original)
+            ruta_destino = os.path.join(CARPETA_CANCIONES, nombre_archivo)
+
+            # Evitar duplicados en el JSON
+            if any(c["ruta"] == ruta_destino for c in app.canciones):
                 continue
 
-            # Título por defecto: nombre del archivo
-            titulo = os.path.splitext(os.path.basename(ruta))[0]
+            # Si el archivo no existe en la carpeta, copiarlo
+            if not os.path.exists(ruta_destino):
+                shutil.copy2(ruta_original, ruta_destino)
+
+            # Título por defecto
+            titulo = os.path.splitext(nombre_archivo)[0]
             artista = "Desconocido"
 
-            # Obtener duración del archivo
-            audio = MP3(ruta)
+            # Obtener duración y metadatos
+            audio = MP3(ruta_destino)
             duracion = int(audio.info.length)
 
-            # Intentar leer metadatos ID3
             try:
-                etiquetas = EasyID3(ruta)
+                etiquetas = EasyID3(ruta_destino)
                 titulo = etiquetas.get("title", [titulo])[0]
                 artista = etiquetas.get("artist", ["Desconocido"])[0]
             except Exception:
                 pass
 
-            # Formatear duración en mm:ss
+            # Formatear duración
             minutos = duracion // 60
             segundos = duracion % 60
             tiempo = f"{minutos:02}:{segundos:02}"
 
-            # Crear diccionario de la canción
             cancion = {
-                "ruta": ruta,
+                "ruta": ruta_destino,
                 "titulo": titulo,
                 "artista": artista,
                 "duracion": tiempo
@@ -63,7 +75,7 @@ def agregar_musica(app):
             mostrar_cancion(app, cancion)
 
         except Exception as e:
-            print(f"Error al cargar {ruta}: {e}")
+            print(f"Error al cargar {ruta_original}: {e}")
 
 
 def mostrar_cancion(app, cancion):
