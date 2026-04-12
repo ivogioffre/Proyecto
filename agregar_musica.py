@@ -23,7 +23,6 @@ def agregar_musica(app):
     if not rutas:
         return
 
-    # Crear la carpeta si no existe
     if not os.path.exists(CARPETA_CANCIONES):
         os.makedirs(CARPETA_CANCIONES)
 
@@ -32,19 +31,15 @@ def agregar_musica(app):
             nombre_archivo = os.path.basename(ruta_original)
             ruta_destino = os.path.join(CARPETA_CANCIONES, nombre_archivo)
 
-            # Evitar duplicados en el JSON
             if any(c["ruta"] == ruta_destino for c in app.canciones):
                 continue
 
-            # Si el archivo no existe en la carpeta, copiarlo
             if not os.path.exists(ruta_destino):
                 shutil.copy2(ruta_original, ruta_destino)
 
-            # Título por defecto
             titulo = os.path.splitext(nombre_archivo)[0]
             artista = "Desconocido"
 
-            # Obtener duración y metadatos
             audio = MP3(ruta_destino)
             duracion = int(audio.info.length)
 
@@ -55,7 +50,6 @@ def agregar_musica(app):
             except Exception:
                 pass
 
-            # Formatear duración
             minutos = duracion // 60
             segundos = duracion % 60
             tiempo = f"{minutos:02}:{segundos:02}"
@@ -67,20 +61,20 @@ def agregar_musica(app):
                 "duracion": tiempo
             }
 
-            # Agregar a la lista y guardar en JSON
             app.canciones.append(cancion)
             json_utils.guardar_canciones(app.canciones)
 
-            # Mostrar en la interfaz
-            mostrar_cancion(app, cancion)
+            mostrar_cancion(app, cancion, len(app.canciones) - 1)
 
         except Exception as e:
             print(f"Error al cargar {ruta_original}: {e}")
 
 
-def mostrar_cancion(app, cancion):
+def mostrar_cancion(app, cancion, index):
     """
-    Muestra una canción en la interfaz con estética neón.
+    Muestra una canción en la interfaz.
+    Al hacer click en la canción, se reproduce.
+    El botón + no reproduce nada.
     """
     frame = ctk.CTkFrame(
         app.scroll_canciones,
@@ -89,7 +83,6 @@ def mostrar_cancion(app, cancion):
     )
     frame.pack(fill="x", pady=5, padx=5)
 
-    # Título y artista
     info = ctk.CTkLabel(
         frame,
         text=f"🎵 {cancion['titulo']} - {cancion['artista']}",
@@ -98,7 +91,6 @@ def mostrar_cancion(app, cancion):
     )
     info.pack(side="left", padx=10, pady=10, expand=True, fill="x")
 
-    # Duración
     tiempo = ctk.CTkLabel(
         frame,
         text=cancion["duracion"],
@@ -106,7 +98,6 @@ def mostrar_cancion(app, cancion):
     )
     tiempo.pack(side="left", padx=10)
 
-    # Botón para agregar a playlist (visual por ahora)
     btn_add = ctk.CTkButton(
         frame,
         text="➕",
@@ -116,3 +107,10 @@ def mostrar_cancion(app, cancion):
         text_color="black"
     )
     btn_add.pack(side="right", padx=10)
+
+    def reproducir_con_click(event=None):
+        app.player.reproducir_indice(index)
+
+    frame.bind("<Button-1>", reproducir_con_click)
+    info.bind("<Button-1>", reproducir_con_click)
+    tiempo.bind("<Button-1>", reproducir_con_click)

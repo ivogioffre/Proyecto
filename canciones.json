@@ -10,5 +10,11 @@
         "titulo": "Enjoy the Silence",
         "artista": "Depeche Mode",
         "duracion": "04:40"
+    },
+    {
+        "ruta": "canciones_guardadas\\Bohemian Rhapsody.mp3",
+        "titulo": "Bohemian Rhapsody",
+        "artista": "Queen",
+        "duracion": "05:54"
     }
 ]

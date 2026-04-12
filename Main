@@ -2,6 +2,7 @@ import customtkinter as ctk
 from PIL import Image
 import agregar_musica
 import json_utils
+from reproducir import ReproductorAudio
 
 # --- CONFIGURACIÓN ---
 ctk.set_appearance_mode("dark")
@@ -125,9 +126,13 @@ class Reproductor:
         )
         self.scroll_canciones.pack(fill="both", expand=True, padx=10, pady=10)
 
+        # Reproductor de audio y barra inferior
+        self.player = ReproductorAudio(self)
+        self.player.crear_barra_reproductor()
+
         # Mostrar las canciones cargadas desde el JSON
-        for cancion in self.canciones:
-            agregar_musica.mostrar_cancion(self, cancion)
+        for i, cancion in enumerate(self.canciones):
+            agregar_musica.mostrar_cancion(self, cancion, i)
 
     # --- CREAR BOTON CON ICONO ---
     def crear_boton(self, texto, ruta_imagen):
