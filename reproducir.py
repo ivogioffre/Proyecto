@@ -1,5 +1,6 @@
 import os
 import time
+import random
 
 import customtkinter as ctk
 import pygame
@@ -17,6 +18,9 @@ class ReproductorAudio:
 
         self.reproduciendo = False
         self.pausado = False
+
+        self.shuffle = False
+        self.repeat = False
 
         self.duracion = 0.0
         self.tiempo_acumulado = 0.0
@@ -36,6 +40,8 @@ class ReproductorAudio:
         self.img_pausa = self._cargar_imagen("imagenes/boton_pausa.png", (42, 42))
         self.img_siguiente = self._cargar_imagen("imagenes/boton_siguiente.png", (38, 38))
         self.img_anterior = self._cargar_imagen("imagenes/boton_anterior.png", (38, 38))
+        self.img_shuffle = self._cargar_imagen("imagenes/aleatorio.png", (34, 34))
+        self.img_repeat = self._cargar_imagen("imagenes/repetir.png", (34, 34))
 
     def _cargar_imagen(self, ruta, size):
         try:
@@ -82,6 +88,18 @@ class ReproductorAudio:
         frame_botones = ctk.CTkFrame(frame_centro, fg_color="transparent")
         frame_botones.pack(pady=(5, 8))
 
+        self.btn_shuffle = ctk.CTkButton(
+            frame_botones,
+            text="" if self.img_shuffle else "🔀",
+            image=self.img_shuffle,
+            width=48,
+            height=48,
+            fg_color="#1a0033",
+            hover_color="#ff00ff",
+            command=self.toggle_shuffle
+        )
+        self.btn_shuffle.pack(side="left", padx=8)
+
         self.btn_anterior = ctk.CTkButton(
             frame_botones,
             text="" if self.img_anterior else "⏮",
@@ -118,6 +136,18 @@ class ReproductorAudio:
             command=self.siguiente
         )
         self.btn_siguiente.pack(side="left", padx=8)
+
+        self.btn_repeat = ctk.CTkButton(
+            frame_botones,
+            text="" if self.img_repeat else "🔁",
+            image=self.img_repeat,
+            width=48,
+            height=48,
+            fg_color="#1a0033",
+            hover_color="#ff00ff",
+            command=self.toggle_repeat
+        )
+        self.btn_repeat.pack(side="left", padx=8)
 
         self.slider_progreso = ctk.CTkSlider(
             frame_centro,
@@ -165,6 +195,7 @@ class ReproductorAudio:
         self.slider_volumen.pack(anchor="e", fill="x", pady=(10, 0))
 
         self.set_volumen(0.5)
+        self._actualizar_botones_modos()
         self.app.root.after(200, self._actualizar_estado)
 
     def _formato_tiempo(self, segundos):
@@ -177,7 +208,7 @@ class ReproductorAudio:
         return next((c for c in self.app.canciones if c["ruta"] == ruta), None)
 
     def _canciones_fuente(self):
-        if self.cola_actual:
+        if self.cola_actual is not None:
             return self.cola_actual
         return [c["ruta"] for c in self.app.canciones]
 
@@ -231,19 +262,49 @@ class ReproductorAudio:
             else:
                 self.btn_play_pausa.configure(image=None, text="⏸")
 
+    def _actualizar_botones_modos(self):
+        if self.shuffle:
+            self.btn_shuffle.configure(fg_color="#ff00ff")
+        else:
+            self.btn_shuffle.configure(fg_color="#1a0033")
+
+        if self.repeat:
+            self.btn_repeat.configure(fg_color="#ff00ff")
+        else:
+            self.btn_repeat.configure(fg_color="#1a0033")
+
+    def _indice_aleatorio_diferente(self):
+        fuente = self._canciones_fuente()
+        if not fuente:
+            return None
+
+        if len(fuente) == 1:
+            return 0
+
+        if self.indice_actual is None:
+            return random.randint(0, len(fuente) - 1)
+
+        opciones = list(range(len(fuente)))
+        if self.indice_actual in opciones:
+            opciones.remove(self.indice_actual)
+
+        if not opciones:
+            return self.indice_actual
+
+        return random.choice(opciones)
+
     def reproducir_indice(self, indice, lista=None):
         if not self.app.canciones:
             return
 
-        fuente = lista if lista is not None else [c["ruta"] for c in self.app.canciones]
+        fuente = list(lista) if lista is not None else [c["ruta"] for c in self.app.canciones]
         if indice < 0 or indice >= len(fuente):
             return
 
-        self.cola_actual = lista
+        self.cola_actual = fuente if lista is not None else None
         self.indice_actual = indice
 
         ruta = fuente[indice]
-        cancion = self._buscar_cancion_por_ruta(ruta)
 
         try:
             pygame.mixer.music.stop()
@@ -300,7 +361,14 @@ class ReproductorAudio:
             self.reproducir_indice(0, self.cola_actual)
             return
 
-        nuevo = (self.indice_actual + 1) % len(fuente)
+        if self.shuffle:
+            nuevo = self._indice_aleatorio_diferente()
+        else:
+            nuevo = (self.indice_actual + 1) % len(fuente)
+
+        if nuevo is None:
+            return
+
         self.reproducir_indice(nuevo, self.cola_actual)
 
     def anterior(self):
@@ -312,8 +380,23 @@ class ReproductorAudio:
             self.reproducir_indice(0, self.cola_actual)
             return
 
-        nuevo = (self.indice_actual - 1) % len(fuente)
+        if self.shuffle:
+            nuevo = self._indice_aleatorio_diferente()
+        else:
+            nuevo = (self.indice_actual - 1) % len(fuente)
+
+        if nuevo is None:
+            return
+
         self.reproducir_indice(nuevo, self.cola_actual)
+
+    def toggle_shuffle(self):
+        self.shuffle = not self.shuffle
+        self._actualizar_botones_modos()
+
+    def toggle_repeat(self):
+        self.repeat = not self.repeat
+        self._actualizar_botones_modos()
 
     def set_volumen(self, valor):
         try:
@@ -372,11 +455,17 @@ class ReproductorAudio:
             text=f"{self._formato_tiempo(posicion)} / {self._formato_tiempo(self.duracion)}"
         )
 
+    def _termino_cancion(self):
+        if self.repeat:
+            self.reproducir_indice(self.indice_actual, self.cola_actual)
+        else:
+            self.siguiente()
+
     def _actualizar_estado(self):
         try:
             if self.indice_actual is not None and self.reproduciendo and not self.pausado:
                 if not pygame.mixer.music.get_busy():
-                    self.siguiente()
+                    self._termino_cancion()
                     self.app.root.after(200, self._actualizar_estado)
                     return
 
