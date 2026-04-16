@@ -2,6 +2,7 @@ import customtkinter as ctk
 from PIL import Image
 import agregar_musica
 import json_utils
+import playlist
 from reproducir import ReproductorAudio
 
 # --- CONFIGURACIÓN ---
@@ -57,6 +58,9 @@ class Reproductor:
         self.btn_inicio.pack(pady=20, padx=10, fill="x")
         self.btn_biblioteca.pack(pady=20, padx=10, fill="x")
         self.btn_guardado.pack(pady=20, padx=10, fill="x")
+
+        self.btn_inicio.configure(command=self.mostrar_inicio)
+        self.btn_biblioteca.configure(command=lambda: playlist.mostrar_biblioteca(self))
 
         # Conectar el botón con la función externa
         self.btn_guardado.configure(
@@ -126,11 +130,20 @@ class Reproductor:
         )
         self.scroll_canciones.pack(fill="both", expand=True, padx=10, pady=10)
 
-        # Reproductor de audio y barra inferior
+        # Reproductor de audio
         self.player = ReproductorAudio(self)
         self.player.crear_barra_reproductor()
 
         # Mostrar las canciones cargadas desde el JSON
+        self.mostrar_inicio()
+
+    def limpiar_scroll(self):
+        for widget in self.scroll_canciones.winfo_children():
+            widget.destroy()
+
+    def mostrar_inicio(self):
+        self.limpiar_scroll()
+
         for i, cancion in enumerate(self.canciones):
             agregar_musica.mostrar_cancion(self, cancion, i)
 

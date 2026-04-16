@@ -10,11 +10,11 @@ from mutagen.mp3 import MP3
 class ReproductorAudio:
     def __init__(self, app):
         self.app = app
-        self.canciones = app.canciones
-
         pygame.mixer.init()
 
         self.indice_actual = None
+        self.cola_actual = None
+
         self.reproduciendo = False
         self.pausado = False
 
@@ -23,7 +23,6 @@ class ReproductorAudio:
         self.inicio_reanudado = None
 
         self.actualizando_slider = False
-        self.actualizando_ui = False
 
         self.barra = None
         self.lbl_titulo = None
@@ -56,7 +55,6 @@ class ReproductorAudio:
         self.barra.grid_columnconfigure(1, weight=5)
         self.barra.grid_columnconfigure(2, weight=2)
 
-        # IZQUIERDA: info de canción
         frame_info = ctk.CTkFrame(self.barra, fg_color="transparent")
         frame_info.grid(row=0, column=0, sticky="nsew", padx=15, pady=15)
 
@@ -78,7 +76,6 @@ class ReproductorAudio:
         )
         self.lbl_artista.pack(anchor="w", pady=(5, 0))
 
-        # CENTRO: botones + progreso
         frame_centro = ctk.CTkFrame(self.barra, fg_color="transparent")
         frame_centro.grid(row=0, column=1, sticky="nsew", padx=10, pady=10)
 
@@ -142,7 +139,6 @@ class ReproductorAudio:
         )
         self.lbl_tiempo.pack(pady=(2, 0))
 
-        # DERECHA: volumen
         frame_volumen = ctk.CTkFrame(self.barra, fg_color="transparent")
         frame_volumen.grid(row=0, column=2, sticky="nsew", padx=15, pady=15)
 
@@ -169,7 +165,6 @@ class ReproductorAudio:
         self.slider_volumen.pack(anchor="e", fill="x", pady=(10, 0))
 
         self.set_volumen(0.5)
-
         self.app.root.after(200, self._actualizar_estado)
 
     def _formato_tiempo(self, segundos):
@@ -178,29 +173,23 @@ class ReproductorAudio:
         segundos = segundos % 60
         return f"{minutos:02}:{segundos:02}"
 
-    def _actualizar_info_ui(self):
+    def _buscar_cancion_por_ruta(self, ruta):
+        return next((c for c in self.app.canciones if c["ruta"] == ruta), None)
+
+    def _canciones_fuente(self):
+        if self.cola_actual:
+            return self.cola_actual
+        return [c["ruta"] for c in self.app.canciones]
+
+    def _cancion_actual(self):
         if self.indice_actual is None:
-            self.lbl_titulo.configure(text="Ninguna canción reproduciéndose")
-            self.lbl_artista.configure(text="")
-            self.lbl_tiempo.configure(text="00:00 / 00:00")
-            self.slider_progreso.set(0)
-            return
+            return None
 
-        cancion = self.canciones[self.indice_actual]
-        self.lbl_titulo.configure(text=cancion.get("titulo", "Sin título"))
-        self.lbl_artista.configure(text=cancion.get("artista", "Desconocido"))
-
-    def _actualizar_icono_play(self):
-        if self.pausado:
-            if self.img_play:
-                self.btn_play_pausa.configure(image=self.img_play, text="")
-            else:
-                self.btn_play_pausa.configure(image=None, text="▶")
-        else:
-            if self.img_pausa:
-                self.btn_play_pausa.configure(image=self.img_pausa, text="")
-            else:
-                self.btn_play_pausa.configure(image=None, text="⏸")
+        fuente = self._canciones_fuente()
+        if 0 <= self.indice_actual < len(fuente):
+            ruta = fuente[self.indice_actual]
+            return self._buscar_cancion_por_ruta(ruta)
+        return None
 
     def _duracion_cancion(self, ruta):
         try:
@@ -218,30 +207,53 @@ class ReproductorAudio:
 
         return self.tiempo_acumulado + (time.monotonic() - self.inicio_reanudado)
 
-    def reproducir_indice(self, indice, desde=0.0):
-        if not self.canciones:
+    def _actualizar_info_ui(self):
+        cancion = self._cancion_actual()
+        if cancion is None:
+            self.lbl_titulo.configure(text="Ninguna canción reproduciéndose")
+            self.lbl_artista.configure(text="")
+            self.lbl_tiempo.configure(text="00:00 / 00:00")
+            self.slider_progreso.set(0)
             return
 
-        if indice < 0 or indice >= len(self.canciones):
+        self.lbl_titulo.configure(text=cancion.get("titulo", "Sin título"))
+        self.lbl_artista.configure(text=cancion.get("artista", "Desconocido"))
+
+    def _actualizar_icono_play(self):
+        if self.pausado:
+            if self.img_play:
+                self.btn_play_pausa.configure(image=self.img_play, text="")
+            else:
+                self.btn_play_pausa.configure(image=None, text="▶")
+        else:
+            if self.img_pausa:
+                self.btn_play_pausa.configure(image=self.img_pausa, text="")
+            else:
+                self.btn_play_pausa.configure(image=None, text="⏸")
+
+    def reproducir_indice(self, indice, lista=None):
+        if not self.app.canciones:
             return
 
-        cancion = self.canciones[indice]
-        ruta = cancion["ruta"]
+        fuente = lista if lista is not None else [c["ruta"] for c in self.app.canciones]
+        if indice < 0 or indice >= len(fuente):
+            return
+
+        self.cola_actual = lista
+        self.indice_actual = indice
+
+        ruta = fuente[indice]
+        cancion = self._buscar_cancion_por_ruta(ruta)
 
         try:
             pygame.mixer.music.stop()
             pygame.mixer.music.load(ruta)
+            pygame.mixer.music.play()
 
-            if desde > 0:
-                pygame.mixer.music.play(start=float(desde))
-            else:
-                pygame.mixer.music.play()
-
-            self.indice_actual = indice
             self.reproduciendo = True
             self.pausado = False
             self.duracion = self._duracion_cancion(ruta)
-            self.tiempo_acumulado = float(desde)
+            self.tiempo_acumulado = 0.0
             self.inicio_reanudado = time.monotonic()
 
             self._actualizar_info_ui()
@@ -251,8 +263,13 @@ class ReproductorAudio:
         except Exception as e:
             print(f"Error al reproducir {ruta}: {e}")
 
+    def reproducir_playlist(self, rutas):
+        if not rutas:
+            return
+        self.reproducir_indice(0, lista=rutas)
+
     def toggle_play_pausa(self):
-        if not self.canciones:
+        if not self.app.canciones:
             return
 
         if self.indice_actual is None:
@@ -260,7 +277,7 @@ class ReproductorAudio:
             return
 
         if not self.reproduciendo:
-            self.reproducir_indice(self.indice_actual, self.tiempo_acumulado)
+            self.reproducir_indice(self.indice_actual, self.cola_actual)
             return
 
         if self.pausado:
@@ -275,26 +292,28 @@ class ReproductorAudio:
         self._actualizar_icono_play()
 
     def siguiente(self):
-        if not self.canciones:
+        fuente = self._canciones_fuente()
+        if not fuente:
             return
 
         if self.indice_actual is None:
-            self.reproducir_indice(0)
+            self.reproducir_indice(0, self.cola_actual)
             return
 
-        nuevo = (self.indice_actual + 1) % len(self.canciones)
-        self.reproducir_indice(nuevo)
+        nuevo = (self.indice_actual + 1) % len(fuente)
+        self.reproducir_indice(nuevo, self.cola_actual)
 
     def anterior(self):
-        if not self.canciones:
+        fuente = self._canciones_fuente()
+        if not fuente:
             return
 
         if self.indice_actual is None:
-            self.reproducir_indice(0)
+            self.reproducir_indice(0, self.cola_actual)
             return
 
-        nuevo = (self.indice_actual - 1) % len(self.canciones)
-        self.reproducir_indice(nuevo)
+        nuevo = (self.indice_actual - 1) % len(fuente)
+        self.reproducir_indice(nuevo, self.cola_actual)
 
     def set_volumen(self, valor):
         try:
@@ -303,19 +322,25 @@ class ReproductorAudio:
             pass
 
     def _al_mover_progreso(self, valor):
-        if self.actualizando_slider:
+        if self.indice_actual is None or self.duracion <= 0:
             return
 
-        if self.indice_actual is None or self.duracion <= 0:
+        if self.actualizando_slider:
             return
 
         nuevo_segundo = (float(valor) / 100) * self.duracion
         self.tiempo_acumulado = nuevo_segundo
         self.inicio_reanudado = time.monotonic()
 
+        fuente = self._canciones_fuente()
+        if not fuente or self.indice_actual >= len(fuente):
+            return
+
+        ruta = fuente[self.indice_actual]
+
         try:
             pygame.mixer.music.stop()
-            pygame.mixer.music.load(self.canciones[self.indice_actual]["ruta"])
+            pygame.mixer.music.load(ruta)
 
             if self.pausado:
                 pygame.mixer.music.play(start=float(nuevo_segundo))
@@ -324,7 +349,7 @@ class ReproductorAudio:
                 pygame.mixer.music.play(start=float(nuevo_segundo))
 
         except Exception as e:
-            print(f"Error al mover el progreso: {e}")
+            print(f"Error al mover progreso: {e}")
 
         self._actualizar_slider_y_tiempo()
 
@@ -333,10 +358,9 @@ class ReproductorAudio:
             return
 
         posicion = self._posicion_actual()
-        if posicion < 0:
-            posicion = 0
-
         porcentaje = (posicion / self.duracion) * 100 if self.duracion > 0 else 0
+        if porcentaje < 0:
+            porcentaje = 0
         if porcentaje > 100:
             porcentaje = 100
 

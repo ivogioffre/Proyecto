@@ -5,16 +5,13 @@ from mutagen.easyid3 import EasyID3
 import os
 import shutil
 import json_utils
+import playlist
 
 # Carpeta donde se almacenarán las canciones copiadas
 CARPETA_CANCIONES = "canciones_guardadas"
 
 
 def agregar_musica(app):
-    """
-    Permite seleccionar archivos de audio, copiarlos a una carpeta local,
-    leer sus metadatos y mostrarlos en la interfaz principal del reproductor.
-    """
     rutas = filedialog.askopenfilenames(
         title="Seleccionar canciones",
         filetypes=[("Archivos de audio", "*.mp3")]
@@ -70,12 +67,7 @@ def agregar_musica(app):
             print(f"Error al cargar {ruta_original}: {e}")
 
 
-def mostrar_cancion(app, cancion, index):
-    """
-    Muestra una canción en la interfaz.
-    Al hacer click en la canción, se reproduce.
-    El botón + no reproduce nada.
-    """
+def mostrar_cancion(app, cancion, index, mostrar_boton_agregar=True):
     frame = ctk.CTkFrame(
         app.scroll_canciones,
         fg_color="#220044",
@@ -98,15 +90,17 @@ def mostrar_cancion(app, cancion, index):
     )
     tiempo.pack(side="left", padx=10)
 
-    btn_add = ctk.CTkButton(
-        frame,
-        text="➕",
-        width=40,
-        fg_color="#ff00ff",
-        hover_color="#ff66ff",
-        text_color="black"
-    )
-    btn_add.pack(side="right", padx=10)
+    if mostrar_boton_agregar:
+        btn_add = ctk.CTkButton(
+            frame,
+            text="➕",
+            width=40,
+            fg_color="#ff00ff",
+            hover_color="#ff66ff",
+            text_color="black",
+            command=lambda: playlist.agregar_a_playlist(app, cancion)
+        )
+        btn_add.pack(side="right", padx=10)
 
     def reproducir_con_click(event=None):
         app.player.reproducir_indice(index)
