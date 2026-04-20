@@ -1,3 +1,4 @@
+# playlist.py
 import customtkinter as ctk
 from tkinter import filedialog, simpledialog, messagebox
 from PIL import Image
@@ -29,6 +30,15 @@ def guardar_playlists(playlists):
 def limpiar_scroll(app):
     for widget in app.scroll_canciones.winfo_children():
         widget.destroy()
+
+    if hasattr(app, "tabla_playlist"):
+        del app.tabla_playlist
+    if hasattr(app, "fila_actual"):
+        del app.fila_actual
+
+    # Limpiar referencias de filas para el highlight
+    if hasattr(app, "player"):
+        app.player.limpiar_filas()
 
 
 def formato_tiempo(segundos):
@@ -102,6 +112,13 @@ def _actualizar_cola_reproductor(app, old_rutas, new_rutas, indice_afectado=None
 
 
 def mostrar_biblioteca(app):
+    # Al ir a biblioteca, la búsqueda no aplica sobre canciones individuales
+    app.vista_activa = "biblioteca"
+    app.limpiar_busqueda() if hasattr(app, "limpiar_busqueda") else None
+    _renderizar_biblioteca(app)
+
+
+def _renderizar_biblioteca(app):
     limpiar_scroll(app)
 
     playlists = cargar_playlists()
@@ -271,7 +288,7 @@ def crear_playlist(app, cancion=None):
         playlists[nombre]["canciones"].append(cancion["ruta"])
 
     guardar_playlists(playlists)
-    mostrar_biblioteca(app)
+    _renderizar_biblioteca(app)
 
 
 def cambiar_portada(app, nombre_playlist):
@@ -285,7 +302,7 @@ def cambiar_portada(app, nombre_playlist):
 
     playlists[nombre_playlist]["portada"] = portada_destino
     guardar_playlists(playlists)
-    mostrar_biblioteca(app)
+    _renderizar_biblioteca(app)
 
 
 def eliminar_playlist(app, nombre):
@@ -305,10 +322,20 @@ def eliminar_playlist(app, nombre):
 
     playlists.pop(nombre, None)
     guardar_playlists(playlists)
-    mostrar_biblioteca(app)
+    _renderizar_biblioteca(app)
 
 
 def abrir_playlist(app, nombre):
+    # Registrar la vista activa y limpiar el buscador al entrar
+    app.vista_activa = f"playlist:{nombre}"
+    if hasattr(app, "limpiar_busqueda"):
+        app.limpiar_busqueda()
+    else:
+        _abrir_playlist_interno(app, nombre)
+
+
+def _abrir_playlist_interno(app, nombre):
+    """Renderiza el header de la playlist + sus canciones (con filtro activo)."""
     limpiar_scroll(app)
 
     playlists = cargar_playlists()
@@ -425,23 +452,61 @@ def abrir_playlist(app, nombre):
     )
     lbl_songs.pack(anchor="w", padx=20, pady=(0, 10))
 
-    if not rutas:
-        vacio = ctk.CTkLabel(
-            app.scroll_canciones,
-            text="Esta playlist todavía no tiene canciones.",
-            text_color="white",
-            font=("Arial", 15)
-        )
-        vacio.pack(pady=20)
+    # Renderizar canciones con filtro
+    renderizar_canciones_playlist(app, nombre, solo_lista=True)
+
+
+def renderizar_canciones_playlist(app, nombre, solo_lista=False):
+    """
+    Renderiza las canciones de una playlist aplicando el filtro del buscador.
+    - solo_lista=True: solo reemplaza la sección de canciones (sin redibujar el header)
+    - solo_lista=False: redibuja todo (header + canciones)
+
+    CLAVE ANTI-BUG: el índice pasado a reproducir_indice siempre apunta
+    a la lista ORIGINAL de rutas, no a la lista filtrada.
+    """
+    if not solo_lista:
+        _abrir_playlist_interno(app, nombre)
         return
 
-    for ruta in rutas:
+    playlists = cargar_playlists()
+    datos = playlists.get(nombre)
+    if not datos:
+        return
+
+    rutas_originales = datos.get("canciones", [])
+
+    # Obtener canciones completas para poder filtrar por metadatos
+    canciones_playlist = []
+    for ruta in rutas_originales:
         cancion = next((c for c in app.canciones if c["ruta"] == ruta), None)
         if cancion:
-            mostrar_cancion_en_playlist(app, nombre, cancion)
+            canciones_playlist.append(cancion)
+
+    # Aplicar filtro del buscador
+    canciones_filtradas = app._filtrar_canciones(canciones_playlist)
+    query = app._texto_busqueda()
+
+    if not canciones_filtradas:
+        lbl = ctk.CTkLabel(
+            app.scroll_canciones,
+            text=f'No se encontraron resultados para "{query}".' if query else "Esta playlist todavía no tiene canciones.",
+            text_color="#888888",
+            font=("Arial", 15)
+        )
+        lbl.pack(pady=20)
+        return
+
+    for cancion in canciones_filtradas:
+        # Índice en la lista ORIGINAL → el reproductor no se desincroniza
+        try:
+            indice_original = rutas_originales.index(cancion["ruta"])
+        except ValueError:
+            continue
+        mostrar_cancion_en_playlist(app, nombre, cancion, rutas_originales, indice_original)
 
 
-def mostrar_cancion_en_playlist(app, nombre_playlist, cancion):
+def mostrar_cancion_en_playlist(app, nombre_playlist, cancion, rutas_originales, indice_original):
     frame = ctk.CTkFrame(
         app.scroll_canciones,
         fg_color="#220044",
@@ -449,20 +514,31 @@ def mostrar_cancion_en_playlist(app, nombre_playlist, cancion):
     )
     frame.pack(fill="x", pady=5, padx=20)
 
-    info = ctk.CTkLabel(
-        frame,
-        text=f"🎵 {cancion['titulo']} - {cancion['artista']}",
-        text_color="white",
-        anchor="w"
-    )
-    info.pack(side="left", padx=10, pady=10, expand=True, fill="x")
+    frame.grid_columnconfigure(0, weight=4, uniform="col")
+    frame.grid_columnconfigure(1, weight=3, uniform="col")
+    frame.grid_columnconfigure(2, weight=3, uniform="col")
+    frame.grid_columnconfigure(3, weight=2, uniform="col")
+    frame.grid_columnconfigure(4, weight=3, uniform="col")
+    frame.grid_columnconfigure(5, weight=1, uniform="col")
+    frame.grid_columnconfigure(6, weight=0)
 
-    tiempo = ctk.CTkLabel(
-        frame,
-        text=cancion["duracion"],
-        text_color="#00ffff"
-    )
-    tiempo.pack(side="left", padx=10)
+    lbl_titulo = ctk.CTkLabel(frame, text=cancion.get("titulo", ""), text_color="white", anchor="w")
+    lbl_titulo.grid(row=0, column=0, sticky="w", padx=(10, 5), pady=10)
+
+    lbl_artista = ctk.CTkLabel(frame, text=cancion.get("artista", ""), text_color="white", anchor="w")
+    lbl_artista.grid(row=0, column=1, sticky="w", padx=5)
+
+    lbl_album = ctk.CTkLabel(frame, text=cancion.get("album", ""), text_color="white", anchor="w")
+    lbl_album.grid(row=0, column=2, sticky="w", padx=5)
+
+    lbl_año = ctk.CTkLabel(frame, text=cancion.get("año", ""), text_color="white", anchor="w")
+    lbl_año.grid(row=0, column=3, sticky="w", padx=5)
+
+    lbl_genero = ctk.CTkLabel(frame, text=cancion.get("genero", ""), text_color="white", anchor="w")
+    lbl_genero.grid(row=0, column=4, sticky="w", padx=5)
+
+    tiempo = ctk.CTkLabel(frame, text=cancion["duracion"], text_color="#00ffff")
+    tiempo.grid(row=0, column=5, padx=5)
 
     btn_eliminar = ctk.CTkButton(
         frame,
@@ -472,19 +548,18 @@ def mostrar_cancion_en_playlist(app, nombre_playlist, cancion):
         hover_color="#ff3366",
         command=lambda r=cancion["ruta"]: eliminar_cancion_de_playlist(app, nombre_playlist, r)
     )
-    btn_eliminar.pack(side="right", padx=10)
+    btn_eliminar.grid(row=0, column=6, padx=10)
+
+    # Registrar fila para el highlight — labels en orden, el último es la duración
+    labels = [lbl_titulo, lbl_artista, lbl_album, lbl_año, lbl_genero, tiempo]
+    app.player.registrar_fila(cancion["ruta"], frame, labels)
 
     def reproducir_con_click(event=None):
-        rutas = cargar_playlists().get(nombre_playlist, {}).get("canciones", [])
-        try:
-            indice = rutas.index(cancion["ruta"])
-        except ValueError:
-            indice = 0
-        app.player.reproducir_indice(indice, lista=rutas)
+        app.player.reproducir_indice(indice_original, lista=rutas_originales)
 
     frame.bind("<Button-1>", reproducir_con_click)
-    info.bind("<Button-1>", reproducir_con_click)
-    tiempo.bind("<Button-1>", reproducir_con_click)
+    for lbl in labels:
+        lbl.bind("<Button-1>", reproducir_con_click)
 
 
 def eliminar_cancion_de_playlist(app, nombre_playlist, ruta):
@@ -507,7 +582,7 @@ def eliminar_cancion_de_playlist(app, nombre_playlist, ruta):
 def agregar_canciones_a_playlist(app, nombre_playlist):
     ventana = ctk.CTkToplevel(app.root)
     ventana.title("Agregar canciones")
-    ventana.geometry("650x520")
+    ventana.geometry("900x520")
     ventana.grab_set()
 
     titulo = ctk.CTkLabel(
@@ -518,22 +593,55 @@ def agregar_canciones_a_playlist(app, nombre_playlist):
     )
     titulo.pack(pady=12)
 
+    header = ctk.CTkFrame(ventana, fg_color="#1a0033", corner_radius=0)
+    header.pack(fill="x", padx=12)
+    header.grid_columnconfigure(0, weight=4, uniform="col")
+    header.grid_columnconfigure(1, weight=3, uniform="col")
+    header.grid_columnconfigure(2, weight=3, uniform="col")
+    header.grid_columnconfigure(3, weight=2, uniform="col")
+    header.grid_columnconfigure(4, weight=3, uniform="col")
+    header.grid_columnconfigure(5, weight=0)
+
+    for i, texto in enumerate(["Título", "Artista", "Álbum", "Año", "Género"]):
+        ctk.CTkLabel(
+            header,
+            text=texto,
+            text_color="#00ffff",
+            font=("Arial", 13, "bold"),
+            anchor="w"
+        ).grid(row=0, column=i, sticky="w", padx=(10 if i == 0 else 5, 5), pady=6)
+
     frame_scroll = ctk.CTkScrollableFrame(ventana, fg_color="#140028")
-    frame_scroll.pack(fill="both", expand=True, padx=12, pady=12)
+    frame_scroll.pack(fill="both", expand=True, padx=12, pady=(0, 12))
 
     playlists = cargar_playlists()
 
     for cancion in app.canciones:
-        fila = ctk.CTkFrame(frame_scroll, fg_color="#220044", corner_radius=12)
-        fila.pack(fill="x", pady=6)
+        fila = ctk.CTkFrame(frame_scroll, fg_color="#220044", corner_radius=10)
+        fila.pack(fill="x", pady=4)
 
-        lbl = ctk.CTkLabel(
-            fila,
-            text=f"{cancion['titulo']} - {cancion['artista']}",
-            text_color="white",
-            anchor="w"
+        fila.grid_columnconfigure(0, weight=4, uniform="col")
+        fila.grid_columnconfigure(1, weight=3, uniform="col")
+        fila.grid_columnconfigure(2, weight=3, uniform="col")
+        fila.grid_columnconfigure(3, weight=2, uniform="col")
+        fila.grid_columnconfigure(4, weight=3, uniform="col")
+        fila.grid_columnconfigure(5, weight=0)
+
+        ctk.CTkLabel(fila, text=cancion.get("titulo", ""), text_color="white", anchor="w").grid(
+            row=0, column=0, sticky="w", padx=(10, 5), pady=10
         )
-        lbl.pack(side="left", padx=12, pady=10, expand=True, fill="x")
+        ctk.CTkLabel(fila, text=cancion.get("artista", ""), text_color="white", anchor="w").grid(
+            row=0, column=1, sticky="w", padx=5
+        )
+        ctk.CTkLabel(fila, text=cancion.get("album", ""), text_color="white", anchor="w").grid(
+            row=0, column=2, sticky="w", padx=5
+        )
+        ctk.CTkLabel(fila, text=cancion.get("año", ""), text_color="white", anchor="w").grid(
+            row=0, column=3, sticky="w", padx=5
+        )
+        ctk.CTkLabel(fila, text=cancion.get("genero", ""), text_color="white", anchor="w").grid(
+            row=0, column=4, sticky="w", padx=5
+        )
 
         ya_esta = cancion["ruta"] in playlists[nombre_playlist]["canciones"]
 
@@ -546,7 +654,7 @@ def agregar_canciones_a_playlist(app, nombre_playlist):
             state="disabled" if ya_esta else "normal",
             command=lambda r=cancion["ruta"]: _agregar_ruta_a_playlist(app, nombre_playlist, r, ventana)
         )
-        btn.pack(side="right", padx=12, pady=8)
+        btn.grid(row=0, column=5, padx=10, pady=8)
 
     btn_cerrar = ctk.CTkButton(
         ventana,

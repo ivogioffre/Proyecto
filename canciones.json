@@ -1,38 +1,20 @@
 [
     {
-        "ruta": "canciones_guardadas\\Prófugos.mp3",
-        "titulo": "Prófugos",
-        "artista": "Soda Stereo",
-        "duracion": "05:21"
+        "ruta": "canciones_guardadas\\Bring Me To Life -Evanescence.mp3",
+        "titulo": "Bring Me To Life",
+        "artista": "Evanescence",
+        "album": "Fallen",
+        "año": "2009",
+        "genero": "Nu metal",
+        "duracion": "04:13"
     },
     {
-        "ruta": "canciones_guardadas\\Depeche Mode - Enjoy the Silence.mp3",
-        "titulo": "Enjoy the Silence",
-        "artista": "Depeche Mode",
-        "duracion": "04:40"
-    },
-    {
-        "ruta": "canciones_guardadas\\Bohemian Rhapsody.mp3",
-        "titulo": "Bohemian Rhapsody",
-        "artista": "Queen",
-        "duracion": "05:54"
-    },
-    {
-        "ruta": "canciones_guardadas\\Boulevard of Broken Dreams.mp3",
-        "titulo": "Boulevard of Broken Dreams",
-        "artista": "Green Day",
-        "duracion": "04:21"
-    },
-    {
-        "ruta": "canciones_guardadas\\Nirvana - Smells Like Teen Spirit.mp3",
-        "titulo": "Smells Like Teen Spirit",
-        "artista": "Nirvana",
-        "duracion": "05:00"
-    },
-    {
-        "ruta": "canciones_guardadas\\Rihanna - Umbrella.mp3",
-        "titulo": "Umbrella",
-        "artista": "Rihanna",
-        "duracion": "04:14"
+        "ruta": "canciones_guardadas\\In The End - Linkin Park.mp3",
+        "titulo": "In The End",
+        "artista": "Linkin Park",
+        "album": "Hybrid Theory",
+        "año": "2009",
+        "genero": "Nu metal",
+        "duracion": "03:38"
     }
 ]

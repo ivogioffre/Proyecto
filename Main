@@ -1,3 +1,4 @@
+#main
 import customtkinter as ctk
 from PIL import Image
 import agregar_musica
@@ -25,6 +26,9 @@ class Reproductor:
 
         # Cargar canciones desde el JSON
         self.canciones = json_utils.cargar_canciones()
+
+        # Vista activa: "inicio" o "playlist:<nombre>"
+        self.vista_activa = "inicio"
 
         # --- TOPBAR GLOBAL ---
         self.topbar = ctk.CTkFrame(root, height=50, fg_color="#0d0d0d")
@@ -108,7 +112,7 @@ class Reproductor:
         )
         self.logo_texto.pack(side="left", padx=5)
 
-        # Buscador
+        # Buscador — se conecta al método buscar()
         self.buscador = ctk.CTkEntry(
             self.topbar_main,
             placeholder_text="Buscar...",
@@ -118,6 +122,21 @@ class Reproductor:
             border_color="#ff00ff"
         )
         self.buscador.pack(side="left", padx=20, pady=10)
+
+        # Bind: cada tecla dispara la búsqueda
+        self.buscador.bind("<KeyRelease>", self._on_buscar)
+
+        # Botón limpiar búsqueda
+        self.btn_limpiar_busqueda = ctk.CTkButton(
+            self.topbar_main,
+            text="✕",
+            width=30,
+            fg_color="#1a0033",
+            hover_color="#ff0055",
+            text_color="white",
+            command=self.limpiar_busqueda
+        )
+        self.btn_limpiar_busqueda.pack(side="left", padx=(0, 10))
 
         # --- CONTENIDO ---
         self.content = ctk.CTkFrame(self.main, fg_color="#1a0033")
@@ -142,10 +161,80 @@ class Reproductor:
             widget.destroy()
 
     def mostrar_inicio(self):
-        self.limpiar_scroll()
+        """Muestra todas las canciones o el resultado del buscador en inicio."""
+        self.vista_activa = "inicio"
+        self._renderizar_vista()
 
-        for i, cancion in enumerate(self.canciones):
-            agregar_musica.mostrar_cancion(self, cancion, i)
+    def _on_buscar(self, event=None):
+        """Se llama en cada KeyRelease del buscador."""
+        self._renderizar_vista()
+
+    def limpiar_busqueda(self):
+        """Vacía el buscador y refresca la vista."""
+        self.buscador.delete(0, "end")
+        self._renderizar_vista()
+
+    def _texto_busqueda(self):
+        return self.buscador.get().strip().lower()
+
+    def _filtrar_canciones(self, lista):
+        """
+        Recibe una lista de dicts de canciones y devuelve solo las que
+        coinciden con el texto del buscador. Si el buscador está vacío,
+        devuelve la lista completa.
+        Nunca modifica la lista original.
+        """
+        query = self._texto_busqueda()
+        if not query:
+            return lista
+
+        resultado = []
+        for cancion in lista:
+            campos = [
+                cancion.get("titulo", ""),
+                cancion.get("artista", ""),
+                cancion.get("album", ""),
+                cancion.get("genero", ""),
+                cancion.get("año", ""),
+            ]
+            if any(query in campo.lower() for campo in campos):
+                resultado.append(cancion)
+        return resultado
+
+    def _renderizar_vista(self):
+        """
+        Renderiza la vista activa aplicando el filtro del buscador.
+        - "inicio": muestra app.canciones filtradas
+        - "playlist:<nombre>": muestra las canciones de esa playlist filtradas
+        - "biblioteca": no tiene búsqueda por canción, no se toca
+        """
+        if self.vista_activa == "inicio":
+            self._renderizar_inicio_filtrado()
+        elif self.vista_activa.startswith("playlist:"):
+            nombre = self.vista_activa[len("playlist:"):]
+            playlist.renderizar_canciones_playlist(self, nombre)
+
+    def _renderizar_inicio_filtrado(self):
+        """Limpia el scroll y muestra las canciones filtradas del inicio."""
+        self.limpiar_scroll()
+        query = self._texto_busqueda()
+        canciones_filtradas = self._filtrar_canciones(self.canciones)
+
+        if not canciones_filtradas:
+            lbl = ctk.CTkLabel(
+                self.scroll_canciones,
+                text=f'No se encontraron resultados para "{query}".',
+                text_color="#888888",
+                font=("Arial", 15)
+            )
+            lbl.pack(pady=30)
+            return
+
+        for cancion in canciones_filtradas:
+            # El índice que se pasa al reproductor es el de la lista ORIGINAL
+            # para no romper la cola de reproducción
+            indice_original = self.canciones.index(cancion)
+            agregar_musica.mostrar_cancion(self, cancion, indice_original)
 
     # --- CREAR BOTON CON ICONO ---
     def crear_boton(self, texto, ruta_imagen):
@@ -175,7 +264,7 @@ class Reproductor:
             self.sidebar.pack_forget()
             self.sidebar_visible = False
         else:
-            self.sidebar.pack(side="left", fill="y")
+            self.sidebar.pack(side="left", fill="y", before=self.main)
             self.sidebar_visible = True
 
 

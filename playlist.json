@@ -1,11 +1,8 @@
 {
-    "pepe": {
-        "portada": "playlists\\pepe.png",
+    "II": {
+        "portada": "",
         "canciones": [
-            "canciones_guardadas\\Boulevard of Broken Dreams.mp3",
-            "canciones_guardadas\\Prófugos.mp3",
-            "canciones_guardadas\\Rihanna - Umbrella.mp3",
-            "canciones_guardadas\\Bohemian Rhapsody.mp3"
+            "canciones_guardadas\\In The End - Linkin Park.mp3"
         ]
     }
 }
