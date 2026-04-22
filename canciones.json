@@ -16,5 +16,293 @@
         "año": "2009",
         "genero": "Nu metal",
         "duracion": "03:38"
+    },
+    {
+        "ruta": "canciones_guardadas\\En la Ciudad de la Furia.mp3",
+        "titulo": "En la Ciudad de la Furia",
+        "artista": "Soda Stereo",
+        "album": "Doble Vida",
+        "año": "1988",
+        "genero": "Rock Argentino",
+        "duracion": "05:45"
+    },
+    {
+        "ruta": "canciones_guardadas\\Bruno Mars - Locked Out Of Heaven.mp3",
+        "titulo": "Locked Out Of Heaven",
+        "artista": "Bruno Mars",
+        "album": "Unorthodox Jukebox",
+        "año": "2012",
+        "genero": "Pop",
+        "duracion": "03:54"
+    },
+    {
+        "ruta": "canciones_guardadas\\Boulevard of Broken Dreams.mp3",
+        "titulo": "Boulevard of Broken Dreams",
+        "artista": "Green Day",
+        "album": "American Idiot",
+        "año": "2004",
+        "genero": "Rock alternativo",
+        "duracion": "04:21"
+    },
+    {
+        "ruta": "canciones_guardadas\\Ciro - Astros.mp3",
+        "titulo": "Astros",
+        "artista": "Ciro y Los Persas",
+        "album": "27",
+        "año": "2012",
+        "genero": "Rock Argentino",
+        "duracion": "04:08"
+    },
+    {
+        "ruta": "canciones_guardadas\\Bohemian Rhapsody.mp3",
+        "titulo": "Bohemian Rhapsody",
+        "artista": "Queen",
+        "album": "A Night at the Opera",
+        "año": "2018",
+        "genero": "Rock Progresivo",
+        "duracion": "05:54"
+    },
+    {
+        "ruta": "canciones_guardadas\\Coldplay - Paradise.mp3",
+        "titulo": "Paradise",
+        "artista": "Coldplay",
+        "album": "Mylo Xyloto",
+        "año": "2011",
+        "genero": "Pop Rock",
+        "duracion": "04:38"
+    },
+    {
+        "ruta": "canciones_guardadas\\Charly García - Nos Siguen Pegando Abajo.mp3",
+        "titulo": "Nos Siguen Pegando Abajo",
+        "artista": "Charly Garcia",
+        "album": "Clics modernos",
+        "año": "1983",
+        "genero": "Rock Argentino",
+        "duracion": "03:22"
+    },
+    {
+        "ruta": "canciones_guardadas\\Eminem - The Real Slim Shady.mp3",
+        "titulo": "The Real Slim Shady",
+        "artista": "Eminem",
+        "album": "The Marshall Mathers LP",
+        "año": "2000",
+        "genero": "Hip Hop",
+        "duracion": "04:44"
+    },
+    {
+        "ruta": "canciones_guardadas\\Don Omar - Danza Kuduro.mp3",
+        "titulo": "Danza Kuduro",
+        "artista": "Don Omar",
+        "album": "Meet the Orphans",
+        "año": "2010",
+        "genero": "Reguetón",
+        "duracion": "03:18"
+    },
+    {
+        "ruta": "canciones_guardadas\\Avicii - The Nights.mp3",
+        "titulo": "The Nights",
+        "artista": "Avicii",
+        "album": "Stories",
+        "año": "2014",
+        "genero": "folktrónica",
+        "duracion": "02:55"
+    },
+    {
+        "ruta": "canciones_guardadas\\Balada Del Diablo y La Muerte.mp3",
+        "titulo": "Balada Del Diablo y La Muerte",
+        "artista": "La Renga",
+        "album": "Despedazado Por Mil Partes",
+        "año": "1996",
+        "genero": "Rock Argentino",
+        "duracion": "05:36"
+    },
+    {
+        "ruta": "canciones_guardadas\\EL CHIQUI TAPIA - homero.mp3",
+        "titulo": "EL CHIQUI TAPIA",
+        "artista": "Homero Simpson",
+        "album": "Desconocido",
+        "año": "2017",
+        "genero": "Cumbia",
+        "duracion": "02:06"
+    },
+    {
+        "ruta": "canciones_guardadas\\Basket Case.mp3",
+        "titulo": "Basket Case",
+        "artista": "Green Day",
+        "album": "Dookie",
+        "año": "1994",
+        "genero": "Pop punk",
+        "duracion": "03:01"
+    },
+    {
+        "ruta": "canciones_guardadas\\Charly García, Pedro Aznar - Hablando a Tu Corazón.mp3",
+        "titulo": "Hablando a tu corazón",
+        "artista": "Charly Garcia",
+        "album": "Tango",
+        "año": "1986",
+        "genero": "Rock progresivo",
+        "duracion": "04:17"
+    },
+    {
+        "ruta": "canciones_guardadas\\Enrique Iglesias - Subeme La Radio.mp3",
+        "titulo": "Subeme La Radio",
+        "artista": "Enrique Iglesias",
+        "album": "Sencillo",
+        "año": "2017",
+        "genero": "Pop Latino",
+        "duracion": "03:28"
+    },
+    {
+        "ruta": "canciones_guardadas\\Harry Styles - As It Was.mp3",
+        "titulo": "As It Was",
+        "artista": "Harry Styles",
+        "album": "Harry's House",
+        "año": "2022",
+        "genero": "Pop",
+        "duracion": "02:43"
+    },
+    {
+        "ruta": "canciones_guardadas\\Harry Styles - Sign of the Times.mp3",
+        "titulo": "Sign of the Times",
+        "artista": "Harry Styles",
+        "album": "Harry Styles",
+        "año": "2017",
+        "genero": "Pop Rock",
+        "duracion": "05:35"
+    },
+    {
+        "ruta": "canciones_guardadas\\Imagine Dragons - Bones.mp3",
+        "titulo": "Bones",
+        "artista": "Imagine Dragons",
+        "album": "Mercury",
+        "año": "2022",
+        "genero": "Pop Rock",
+        "duracion": "02:42"
+    },
+    {
+        "ruta": "canciones_guardadas\\Queen - We Will Rock You.mp3",
+        "titulo": "We Will Rock You",
+        "artista": "Queenl",
+        "album": "News of the World",
+        "año": "1977",
+        "genero": "Arena Rock",
+        "duracion": "02:14"
+    },
+    {
+        "ruta": "canciones_guardadas\\Rata Blanca - Mujer Amante.mp3",
+        "titulo": "Mujer Amante",
+        "artista": "RataBlanca",
+        "album": "Magos, espadas y rosas",
+        "año": "1990",
+        "genero": "Heavy Metal",
+        "duracion": "06:01"
+    },
+    {
+        "ruta": "canciones_guardadas\\Red Hot Chili Peppers - Otherside.mp3",
+        "titulo": "Otherside",
+        "artista": "Red Hot Chili Peppers",
+        "album": "Sencillo",
+        "año": "2000",
+        "genero": "Rock Alternativo",
+        "duracion": "04:17"
+    },
+    {
+        "ruta": "canciones_guardadas\\Post Malone - Sunflower.mp3",
+        "titulo": "Sunflower",
+        "artista": "Post Malone",
+        "album": "Hollywood's Bleeding",
+        "año": "2018",
+        "genero": "Hip Hop",
+        "duracion": "02:39"
+    },
+    {
+        "ruta": "canciones_guardadas\\Ricky Martin - La Mordidita.mp3",
+        "titulo": "La Mordidita",
+        "artista": "Ricky Martin",
+        "album": "A Quien Quiera Escuchar",
+        "año": "2015",
+        "genero": "Pop Latino",
+        "duracion": "03:42"
+    },
+    {
+        "ruta": "canciones_guardadas\\Rihanna - Umbrella.mp3",
+        "titulo": "Umbrella",
+        "artista": "Rihanna",
+        "album": "Good Girl Gone Bad",
+        "año": "2007",
+        "genero": "Pop",
+        "duracion": "04:14"
+    },
+    {
+        "ruta": "canciones_guardadas\\Soda Stereo - Cuando Pase el Temblor.mp3",
+        "titulo": "Cuando Pase el Temblor",
+        "artista": "Soda Stereo",
+        "album": "Nada Personal",
+        "año": "1985",
+        "genero": "Rock Argentino",
+        "duracion": "04:29"
+    },
+    {
+        "ruta": "canciones_guardadas\\The Weeknd - Niagara Falls.mp3",
+        "titulo": "Niagara Falls",
+        "artista": "The Weeknd",
+        "album": "Hurry Up Tomorrow",
+        "año": "2025",
+        "genero": "R&B",
+        "duracion": "04:37"
+    },
+    {
+        "ruta": "canciones_guardadas\\Shakira - Waka Waka.mp3",
+        "titulo": "Waka Waka",
+        "artista": "Shakira",
+        "album": "Sencillo",
+        "año": "2010",
+        "genero": "Pop",
+        "duracion": "03:30"
+    },
+    {
+        "ruta": "canciones_guardadas\\Keane - Somewhere Only We Know.mp3",
+        "titulo": "Somewhere Only We Know",
+        "artista": "Keane",
+        "album": "Hopes and Fears",
+        "año": "2004",
+        "genero": "Rock Alternativo",
+        "duracion": "03:53"
+    },
+    {
+        "ruta": "canciones_guardadas\\Levitating - Dua Lipa.mp3",
+        "titulo": "Levitating",
+        "artista": "Dua Lipa",
+        "album": "Future Nostalgia",
+        "año": "2020",
+        "genero": "Pop",
+        "duracion": "03:22"
+    },
+    {
+        "ruta": "canciones_guardadas\\Llenos de Magia.mp3",
+        "titulo": "Llenos de Magia",
+        "artista": "La Vela Puerca",
+        "album": "A Contraluz",
+        "año": "2004",
+        "genero": "Rock Uruguayo",
+        "duracion": "04:44"
+    },
+    {
+        "ruta": "canciones_guardadas\\Prófugos.mp3",
+        "titulo": "Prófugos",
+        "artista": "Soda Stereo",
+        "album": "Signos",
+        "año": "1986",
+        "genero": "Rock Argentino",
+        "duracion": "05:21"
+    },
+    {
+        "ruta": "canciones_guardadas\\Soda Stereo - De Música Ligera (Official Video).mp3",
+        "titulo": "De Música Ligera",
+        "artista": "Soda Stereo",
+        "album": "Canción Animal",
+        "año": "1990",
+        "genero": "Rock Argentino",
+        "duracion": "03:30"
     }
 ]

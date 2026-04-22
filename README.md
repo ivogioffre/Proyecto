@@ -13,4 +13,14 @@ se agrega la opcion de reproducir canciones, adelantarlas, atrasarlas,pasar a la
 
 16/04
 
-Se agrega la funcion de crear playlist con el nombre que quieras y la imagen que quieras  de portada,en esta se podra agregar y borrar canciones de las disponibles en el inicio, tambien desde el incios se podran agregar canciones a las playlist y si no hay ninguna crearla.
+1-Se agrega la funcion de crear playlist con el nombre que quieras y la imagen que quieras  de portada,en esta se podra agregar y borrar canciones de las disponibles en el inicio, tambien desde el incios se podran agregar canciones a las playlist y si no hay ninguna crearla.
+
+2-Se agrega la opcion de escuchar en moso aleatorio y de repetir la cancion cuando finalize tanto en las playlist como en el incio
+
+19/04
+
+Se implementa el buscador tanto en el inicio como en las playlist filtrando por nombre de cancion artista album año y genero
+
+ahora cuando una cancion esta en reproduccion aparece realtada
+
+se hacen cambios en el modo aleatorio entre otros cambios generales que mejoran la experiencia en el reproductor

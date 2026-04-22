@@ -1,8 +1,13 @@
 {
-    "II": {
-        "portada": "",
+    "Rock Argentino": {
+        "portada": "playlists\\Rock Argentino.png",
         "canciones": [
-            "canciones_guardadas\\In The End - Linkin Park.mp3"
+            "canciones_guardadas\\En la Ciudad de la Furia.mp3",
+            "canciones_guardadas\\Ciro - Astros.mp3",
+            "canciones_guardadas\\Charly García - Nos Siguen Pegando Abajo.mp3",
+            "canciones_guardadas\\Balada Del Diablo y La Muerte.mp3",
+            "canciones_guardadas\\Charly García, Pedro Aznar - Hablando a Tu Corazón.mp3",
+            "canciones_guardadas\\Rata Blanca - Mujer Amante.mp3"
         ]
     }
 }
