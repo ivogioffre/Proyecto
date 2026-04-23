@@ -3,6 +3,7 @@ import customtkinter as ctk
 from PIL import Image
 import agregar_musica
 import json_utils
+import ordenar
 import playlist
 from reproducir import ReproductorAudio
 
@@ -264,6 +265,8 @@ class Reproductor:
             )
             lbl.pack(pady=30)
             return
+
+        ordenar.crear_encabezado_canciones(self.scroll_canciones)
 
         # Asegura que la vista arranque arriba
         self.volver_arriba_scroll()

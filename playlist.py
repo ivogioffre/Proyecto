@@ -7,12 +7,17 @@ import json
 import shutil
 
 import agregar_musica
+import ordenar
 
 ARCHIVO_PLAYLISTS = "playlist.json"
 CARPETA_PORTADAS = "playlists"
 
 
 def cargar_playlists():
+    """
+    Carga las playlists desde el archivo JSON.
+    Si el archivo no existe o está corrupto, devuelve un diccionario vacío.
+    """
     if os.path.exists(ARCHIVO_PLAYLISTS):
         try:
             with open(ARCHIVO_PLAYLISTS, "r", encoding="utf-8") as archivo:
@@ -23,11 +28,19 @@ def cargar_playlists():
 
 
 def guardar_playlists(playlists):
+    """
+    Guarda el diccionario de playlists en el archivo JSON.
+    Se utiliza indentación para mantener el archivo legible.
+    """
     with open(ARCHIVO_PLAYLISTS, "w", encoding="utf-8") as archivo:
         json.dump(playlists, archivo, indent=4, ensure_ascii=False)
 
 
 def limpiar_scroll(app):
+    """
+    Elimina todos los elementos visuales del scroll de canciones.
+    También limpia referencias internas utilizadas para selección y reproducción.
+    """
     for widget in app.scroll_canciones.winfo_children():
         widget.destroy()
 
@@ -42,6 +55,9 @@ def limpiar_scroll(app):
 
 
 def formato_tiempo(segundos):
+    """
+    Convierte una cantidad de segundos a formato minutos:segundos (mm:ss).
+    """
     segundos = int(segundos)
     minutos = segundos // 60
     seg = segundos % 60
@@ -49,6 +65,10 @@ def formato_tiempo(segundos):
 
 
 def duracion_total_playlist(app, lista_rutas):
+    """
+    Calcula la duración total de una playlist a partir de las rutas de sus canciones.
+    Busca cada canción en la lista general y suma su duración.
+    """
     total = 0
     for ruta in lista_rutas:
         cancion = next((c for c in app.canciones if c["ruta"] == ruta), None)
@@ -85,6 +105,10 @@ def _elegir_portada(nombre_playlist):
 
 
 def _actualizar_cola_reproductor(app, old_rutas, new_rutas, indice_afectado=None):
+    """
+    Mantiene sincronizada la cola del reproductor cuando se modifica una playlist.
+    Ajusta índices y evita desincronización durante la reproducción.
+    """
     if not hasattr(app, "player"):
         return
 
@@ -112,6 +136,10 @@ def _actualizar_cola_reproductor(app, old_rutas, new_rutas, indice_afectado=None
 
 
 def mostrar_biblioteca(app):
+    """
+    Cambia la vista actual a la biblioteca de playlists.
+    Limpia la búsqueda para evitar conflictos visuales.
+    """
     # Al ir a biblioteca, la búsqueda no aplica sobre canciones individuales
     app.vista_activa = "biblioteca"
     app.limpiar_busqueda() if hasattr(app, "limpiar_busqueda") else None
@@ -168,7 +196,8 @@ def _renderizar_biblioteca(app):
 
         cont = ctk.CTkFrame(card, fg_color="transparent")
         cont.pack(fill="both", expand=True, padx=12, pady=12)
-
+        # --- PORTADA ---
+        # Si existe una imagen de portada válida, se carga
         if portada and os.path.exists(portada):
             try:
                 img = ctk.CTkImage(
@@ -205,7 +234,7 @@ def _renderizar_biblioteca(app):
 
         centro = ctk.CTkFrame(cont, fg_color="transparent")
         centro.pack(side="left", fill="both", expand=True, padx=18)
-
+        # Nombre de la playlist
         lbl_nombre = ctk.CTkLabel(
             centro,
             text=nombre,
@@ -214,7 +243,7 @@ def _renderizar_biblioteca(app):
             anchor="w"
         )
         lbl_nombre.pack(anchor="w")
-
+        # Cantidad de canciones
         lbl_info = ctk.CTkLabel(
             centro,
             text=f"{len(canciones)} canciones",
@@ -226,7 +255,7 @@ def _renderizar_biblioteca(app):
 
         derecha = ctk.CTkFrame(cont, fg_color="transparent")
         derecha.pack(side="right", fill="y")
-
+        # Duración total de la playlist
         lbl_duracion = ctk.CTkLabel(
             derecha,
             text=total,
@@ -234,7 +263,7 @@ def _renderizar_biblioteca(app):
             font=("Arial", 18, "bold")
         )
         lbl_duracion.pack(side="right", padx=10)
-
+        # Botón eliminar playlist
         btn_eliminar = ctk.CTkButton(
             derecha,
             text="✕",
@@ -245,7 +274,7 @@ def _renderizar_biblioteca(app):
             command=lambda n=nombre: eliminar_playlist(app, n)
         )
         btn_eliminar.pack(side="right", padx=(0, 10))
-
+        # Botón reproducir playlist
         btn_play = ctk.CTkButton(
             derecha,
             text="▶",
@@ -257,7 +286,8 @@ def _renderizar_biblioteca(app):
             command=lambda n=nombre: reproducir_playlist_desde_biblioteca(app, n)
         )
         btn_play.pack(side="right", padx=(0, 10))
-
+        # --- EVENTOS DE CLICK ---
+        # Permiten abrir la playlist haciendo click en cualquier parte de la tarjeta
         card.bind("<Button-1>", lambda e, n=nombre: abrir_playlist(app, n))
         cont.bind("<Button-1>", lambda e, n=nombre: abrir_playlist(app, n))
         lbl_nombre.bind("<Button-1>", lambda e, n=nombre: abrir_playlist(app, n))
@@ -269,6 +299,10 @@ def _renderizar_biblioteca(app):
         if hasattr(app, "volver_arriba_scroll"):
             app.root.after_idle(app.volver_arriba_scroll)
 def crear_playlist(app, cancion=None):
+    """
+    Crea una nueva playlist solicitando un nombre al usuario.
+    Opcionalmente puede agregar una canción inicial.
+    """
     nombre = simpledialog.askstring("Nueva playlist", "Nombre de la playlist:")
     if not nombre:
         return
@@ -501,6 +535,7 @@ def renderizar_canciones_playlist(app, nombre, solo_lista=False):
         lbl.pack(pady=20)
         return
 
+    ordenar.crear_encabezado_canciones(app.scroll_canciones, pesos=[4, 3, 3, 2, 3, 1, 0])
     for cancion in canciones_filtradas:
         # Índice en la lista ORIGINAL → el reproductor no se desincroniza
         try:

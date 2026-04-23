@@ -7,6 +7,7 @@ import customtkinter as ctk
 import pygame
 from PIL import Image
 from mutagen.mp3 import MP3
+from tkinter import messagebox
 
 COLOR_FILA_NORMAL  = "#220044"
 COLOR_FILA_ACTIVA  = "#5a0080"
@@ -17,7 +18,13 @@ COLOR_TEXTO_NORMAL = "white"
 class ReproductorAudio:
     def __init__(self, app):
         self.app = app
-        pygame.mixer.init()
+        try:
+            pygame.mixer.init()
+        except Exception:
+            messagebox.showerror("Error de Audio", "No se pudo inicializar el sistema de audio. La reproducción estará deshabilitada.")
+            self.audio_disponible = False
+            return
+        self.audio_disponible = True
 
         self.indice_actual = None
         self.cola_actual = None
@@ -55,9 +62,6 @@ class ReproductorAudio:
         self.img_shuffle   = self._cargar_imagen("imagenes/aleatorio.png",      (34, 34))
         self.img_repeat    = self._cargar_imagen("imagenes/repetir.png",        (34, 34))
 
-    # ------------------------------------------------------------------ #
-    #  Highlight                                                           #
-    # ------------------------------------------------------------------ #
 
     def registrar_fila(self, ruta, frame, labels):
         """
@@ -110,9 +114,9 @@ class ReproductorAudio:
             return fuente[self.indice_actual]
         return None
 
-    # ------------------------------------------------------------------ #
-    #  Imagen helpers                                                      #
-    # ------------------------------------------------------------------ #
+
+    #  Imagen helpers                                                      
+
 
     def _cargar_imagen(self, ruta, size):
         try:
@@ -122,9 +126,9 @@ class ReproductorAudio:
             print(f"No se pudo cargar {ruta}: {e}")
         return None
 
-    # ------------------------------------------------------------------ #
-    #  UI — barra reproductora                                            #
-    # ------------------------------------------------------------------ #
+
+    #  UI — barra reproductora                                            
+
 
     def crear_barra_reproductor(self):
         self.barra = ctk.CTkFrame(self.app.root, height=120, fg_color="#0d0d0d")
@@ -246,9 +250,9 @@ class ReproductorAudio:
             self.shuffle_pos -= 1
         return self.shuffle_lista[self.shuffle_pos]
 
-    # ------------------------------------------------------------------ #
+
     #  Helpers internos                                                    #
-    # ------------------------------------------------------------------ #
+   
 
     def _formato_tiempo(self, segundos):
         segundos = max(0, int(segundos))
@@ -313,6 +317,8 @@ class ReproductorAudio:
     # ------------------------------------------------------------------ #
 
     def reproducir_indice(self, indice, lista=None):
+        if not self.audio_disponible:
+            return
         if not self.app.canciones:
             return
 
@@ -361,6 +367,8 @@ class ReproductorAudio:
         self.reproducir_indice(0, lista=rutas)
 
     def toggle_play_pausa(self):
+        if not self.audio_disponible:
+            return
         if not self.app.canciones:
             return
         if self.indice_actual is None:
@@ -380,6 +388,8 @@ class ReproductorAudio:
         self._actualizar_icono_play()
 
     def siguiente(self):
+        if not self.audio_disponible:
+            return
         fuente = self._canciones_fuente()
         if not fuente:
             return
@@ -390,6 +400,8 @@ class ReproductorAudio:
         self.reproducir_indice(nuevo, self.cola_actual)
 
     def anterior(self):
+        if not self.audio_disponible:
+            return
         fuente = self._canciones_fuente()
         if not fuente:
             return
@@ -410,12 +422,16 @@ class ReproductorAudio:
         self._actualizar_botones_modos()
 
     def set_volumen(self, valor):
+        if not self.audio_disponible:
+            return
         try:
             pygame.mixer.music.set_volume(float(valor))
         except Exception:
             pass
 
     def _al_mover_progreso(self, valor):
+        if not self.audio_disponible:
+            return
         if self.indice_actual is None or self.duracion <= 0 or self.actualizando_slider:
             return
         nuevo_segundo = (float(valor) / 100) * self.duracion
@@ -449,12 +465,16 @@ class ReproductorAudio:
             text=f"{self._formato_tiempo(posicion)} / {self._formato_tiempo(self.duracion)}")
 
     def _termino_cancion(self):
+        if not self.audio_disponible:
+            return
         if self.repeat:
             self.reproducir_indice(self.indice_actual, self.cola_actual)
         else:
             self.siguiente()
 
     def _actualizar_estado(self):
+        if not self.audio_disponible:
+            return
         try:
             if self.indice_actual is not None and self.reproduciendo and not self.pausado:
                 if not pygame.mixer.music.get_busy():

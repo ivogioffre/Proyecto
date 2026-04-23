@@ -99,4 +99,4 @@ Se agregan canciones con nombre artista album año y genero correspondiente cada
 
 Se cambia el README agregando informacion sobre el funcionamiento de cada uno de los archivos del proyecto y en general,ademas de información sobre la instalación de librerías necesarias.
 
-Se corrigue bug en las playlists.
+Se corrigue bug en las playlists y se agregan comentarios.
