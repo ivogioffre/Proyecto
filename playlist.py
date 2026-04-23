@@ -200,7 +200,7 @@ def _renderizar_biblioteca(app):
                 hover_color="#ff00ff",
                 command=lambda n=nombre: cambiar_portada(app, n)
             )
-
+        
         lbl_img.pack(side="left")
 
         centro = ctk.CTkFrame(cont, fg_color="transparent")
@@ -265,8 +265,9 @@ def _renderizar_biblioteca(app):
         lbl_duracion.bind("<Button-1>", lambda e, n=nombre: abrir_playlist(app, n))
         centro.bind("<Button-1>", lambda e, n=nombre: abrir_playlist(app, n))
         derecha.bind("<Button-1>", lambda e, n=nombre: abrir_playlist(app, n))
-
-
+        
+        if hasattr(app, "volver_arriba_scroll"):
+            app.root.after_idle(app.volver_arriba_scroll)
 def crear_playlist(app, cancion=None):
     nombre = simpledialog.askstring("Nueva playlist", "Nombre de la playlist:")
     if not nombre:
@@ -455,6 +456,9 @@ def _abrir_playlist_interno(app, nombre):
     # Renderizar canciones con filtro
     renderizar_canciones_playlist(app, nombre, solo_lista=True)
 
+    if hasattr(app, "volver_arriba_scroll"):
+        app.root.after_idle(app.volver_arriba_scroll)
+
 
 def renderizar_canciones_playlist(app, nombre, solo_lista=False):
     """
@@ -504,7 +508,8 @@ def renderizar_canciones_playlist(app, nombre, solo_lista=False):
         except ValueError:
             continue
         mostrar_cancion_en_playlist(app, nombre, cancion, rutas_originales, indice_original)
-
+    if hasattr(app, "volver_arriba_scroll"):
+        app.root.after_idle(app.volver_arriba_scroll)
 
 def mostrar_cancion_en_playlist(app, nombre_playlist, cancion, rutas_originales, indice_original):
     frame = ctk.CTkFrame(

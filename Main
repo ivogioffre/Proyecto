@@ -7,24 +7,30 @@ import playlist
 from reproducir import ReproductorAudio
 
 # --- CONFIGURACIÓN ---
+# Modo oscuro y tema visual
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
 
 
 class Reproductor:
     def __init__(self, root):
+        """
+        Constructor principal de la aplicación.
+        Inicializa toda la interfaz gráfica, carga datos y conecta los módulos.
+        """
 
         # --- VENTANA ---
         self.root = root
         self.root.geometry("1200x700")
         self.root.title("Nickify")
 
+        # Controla si la sidebar está visible o no
         self.sidebar_visible = True
 
-        # guardar imágenes para que no desaparezcan
+        # guardar imágenes para que no desaparezcan (evita garbage collector de Tkinter)
         self.imagenes = []
 
-        # Cargar canciones desde el JSON
+        # Cargar canciones desde el JSON (persistencia)
         self.canciones = json_utils.cargar_canciones()
 
         # Vista activa: "inicio" o "playlist:<nombre>"
@@ -42,11 +48,12 @@ class Reproductor:
             fg_color="#ff00ff",
             hover_color="#ff66ff",
             text_color="black",
-            command=self.toggle_sidebar
+            command=self.toggle_sidebar  # alterna visibilidad
         )
         self.btn_toggle.pack(side="left", padx=10, pady=5)
 
         # --- CONTENEDOR ---
+        # Contenedor principal donde van sidebar + contenido
         self.container = ctk.CTkFrame(root, fg_color="#0a0a0a")
         self.container.pack(fill="both", expand=True)
 
@@ -63,6 +70,7 @@ class Reproductor:
         self.btn_biblioteca.pack(pady=20, padx=10, fill="x")
         self.btn_guardado.pack(pady=20, padx=10, fill="x")
 
+        # Configuración de acciones de botones
         self.btn_inicio.configure(command=self.mostrar_inicio)
         self.btn_biblioteca.configure(command=lambda: playlist.mostrar_biblioteca(self))
 
@@ -123,7 +131,7 @@ class Reproductor:
         )
         self.buscador.pack(side="left", padx=20, pady=10)
 
-        # Bind: cada tecla dispara la búsqueda
+        # Bind: cada tecla dispara la búsqueda en tiempo real
         self.buscador.bind("<KeyRelease>", self._on_buscar)
 
         # Botón limpiar búsqueda
@@ -149,7 +157,7 @@ class Reproductor:
         )
         self.scroll_canciones.pack(fill="both", expand=True, padx=10, pady=10)
 
-        # Reproductor de audio
+        # Reproductor de audio (módulo externo)
         self.player = ReproductorAudio(self)
         self.player.crear_barra_reproductor()
 
@@ -157,32 +165,59 @@ class Reproductor:
         self.mostrar_inicio()
 
     def limpiar_scroll(self):
+        """
+        Elimina todos los widgets del área de canciones.
+        También reinicia el scroll al inicio.
+        """
         for widget in self.scroll_canciones.winfo_children():
             widget.destroy()
 
+        try:
+            self.scroll_canciones.update_idletasks()
+            self.scroll_canciones._parent_canvas.yview_moveto(0)
+        except Exception:
+            pass
+    
+    def volver_arriba_scroll(self):
+        """
+        Fuerza el scroll a volver al inicio sin borrar contenido.
+        """
+        try:
+            self.scroll_canciones.update_idletasks()
+            self.scroll_canciones._parent_canvas.yview_moveto(0)
+        except Exception:
+            pass
+
     def mostrar_inicio(self):
-        """Muestra todas las canciones o el resultado del buscador en inicio."""
+        """
+        Cambia la vista a inicio (todas las canciones).
+        """
         self.vista_activa = "inicio"
         self._renderizar_vista()
 
     def _on_buscar(self, event=None):
-        """Se llama en cada KeyRelease del buscador."""
+        """
+        Se ejecuta cada vez que el usuario escribe en el buscador.
+        """
         self._renderizar_vista()
 
     def limpiar_busqueda(self):
-        """Vacía el buscador y refresca la vista."""
+        """
+        Limpia el texto del buscador y actualiza la vista.
+        """
         self.buscador.delete(0, "end")
         self._renderizar_vista()
 
     def _texto_busqueda(self):
+        """
+        Devuelve el texto del buscador en minúsculas.
+        """
         return self.buscador.get().strip().lower()
 
     def _filtrar_canciones(self, lista):
         """
-        Recibe una lista de dicts de canciones y devuelve solo las que
-        coinciden con el texto del buscador. Si el buscador está vacío,
-        devuelve la lista completa.
-        Nunca modifica la lista original.
+        Filtra una lista de canciones según el texto buscado.
+        Busca coincidencias en varios campos.
         """
         query = self._texto_busqueda()
         if not query:
@@ -197,16 +232,14 @@ class Reproductor:
                 cancion.get("genero", ""),
                 cancion.get("año", ""),
             ]
+            # Si el texto aparece en cualquiera de los campos → se incluye
             if any(query in campo.lower() for campo in campos):
                 resultado.append(cancion)
         return resultado
 
     def _renderizar_vista(self):
         """
-        Renderiza la vista activa aplicando el filtro del buscador.
-        - "inicio": muestra app.canciones filtradas
-        - "playlist:<nombre>": muestra las canciones de esa playlist filtradas
-        - "biblioteca": no tiene búsqueda por canción, no se toca
+        Decide qué mostrar según la vista actual.
         """
         if self.vista_activa == "inicio":
             self._renderizar_inicio_filtrado()
@@ -215,7 +248,9 @@ class Reproductor:
             playlist.renderizar_canciones_playlist(self, nombre)
 
     def _renderizar_inicio_filtrado(self):
-        """Limpia el scroll y muestra las canciones filtradas del inicio."""
+        """
+        Muestra las canciones filtradas en la vista inicio.
+        """
         self.limpiar_scroll()
         query = self._texto_busqueda()
         canciones_filtradas = self._filtrar_canciones(self.canciones)
@@ -230,14 +265,19 @@ class Reproductor:
             lbl.pack(pady=30)
             return
 
+        # Asegura que la vista arranque arriba
+        self.volver_arriba_scroll()
+
         for cancion in canciones_filtradas:
-            # El índice que se pasa al reproductor es el de la lista ORIGINAL
-            # para no romper la cola de reproducción
+            # índice original para no romper reproducción
             indice_original = self.canciones.index(cancion)
             agregar_musica.mostrar_cancion(self, cancion, indice_original)
 
     # --- CREAR BOTON CON ICONO ---
     def crear_boton(self, texto, ruta_imagen):
+        """
+        Crea un botón con imagen + texto para la sidebar.
+        """
         img = ctk.CTkImage(
             light_image=Image.open(ruta_imagen),
             dark_image=Image.open(ruta_imagen),
@@ -260,6 +300,9 @@ class Reproductor:
 
     # --- MOSTRAR / OCULTAR BARRA ---
     def toggle_sidebar(self):
+        """
+        Alterna la visibilidad de la barra lateral.
+        """
         if self.sidebar_visible:
             self.sidebar.pack_forget()
             self.sidebar_visible = False
